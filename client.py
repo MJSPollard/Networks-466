@@ -1,5 +1,4 @@
 import sys
-import socket
 import requests
 
 # Print out usage message and exit program.
