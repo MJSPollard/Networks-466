@@ -11,7 +11,6 @@ class HandleRequests(BaseHTTPRequestHandler):
         print("FUCKING POST MESSAGE")
         coordinates = self.get_coordinates()
         self.send_result(board.check_hit(int(coordinates.get('x', "-1")), int(coordinates.get('y', "-1"))))
-        print(board.check_hit(int(coordinates.get('x', "-1")), int(coordinates.get('y', "-1"))))
 
     # Send back bad message if client sends get request.
     def do_GET(self):
@@ -30,19 +29,15 @@ class HandleRequests(BaseHTTPRequestHandler):
         if(result == "HIT"):
             print("HIT")
             self.send_response(200)
-            self.end_headers()
         elif(result == "SUNK"):
             print("SUNK")
             self.send_response(200)
-            self.end_headers()
         elif(result == "MISS"):
             print("MISS")
             self.send_response(200)
-            self.end_headers()
         elif(result == "ALREADY_HIT"):
             print("ALREADY HIT")
             self.send_response(410)
-            self.end_headers()
         elif(result == "OUT_OF_BOUNDS"):
             print("OOB")
             self.send_response(404)
