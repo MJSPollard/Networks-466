@@ -35,20 +35,29 @@ class Board:
         else:
             if(self.board_array[x][y] == 'C'):
                 self.hit_count['C'] -= 1
+                if(self.hit_count['C'] <= 0):
+                        return "SUNKC"
                 print(self.hit_count)
-                #mark with X
-                #check if value = 0 if so, sunk
             elif(self.board_array[x][y] == 'B'):
                 self.hit_count['B'] -= 1
                 print(self.hit_count)
+                if(self.hit_count['B'] <= 0):
+                        return "SUNKB"
             elif(self.board_array[x][y] == 'R'):
                 self.hit_count['R'] -= 1
                 print(self.hit_count)
+                if(self.hit_count['R'] <= 0):
+                        return "SUNKR"
             elif(self.board_array[x][y] == 'S'):
                 self.hit_count['S'] -= 1
                 print(self.hit_count)
+                if(self.hit_count['S'] <= 0):
+                        return "SUNKS"
             elif(self.board_array[x][y] == 'D'):
                 self.hit_count['D'] -= 1
                 print(self.hit_count)
-            # check here if sunk
+                if(self.hit_count['D'] <= 0):
+                        return "SUNKD"
+            self.board_array[x][y] = 'X'
+            print(self.board_array)
             return "HIT"

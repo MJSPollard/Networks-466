@@ -28,13 +28,14 @@ class HandleRequests(BaseHTTPRequestHandler):
     def send_result(self, result):
         if(result == "HIT"):
             print("HIT")
-            self.send_response(200)
-        elif(result == "SUNK"):
+            self.send_response(200, "hit=1")
+        elif(result[:-1] == "SUNK"):
             print("SUNK")
-            self.send_response(200)
+            print("result[len(result) - 1:]")
+            self.send_response(200, ("hit=1 sink=" + (result[len(result) - 1:])))
         elif(result == "MISS"):
             print("MISS")
-            self.send_response(200)
+            self.send_response(200, "hit=0")
         elif(result == "ALREADY_HIT"):
             print("ALREADY HIT")
             self.send_response(410)
