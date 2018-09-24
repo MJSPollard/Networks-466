@@ -34,24 +34,26 @@ def fire():
     server_url = "http://%s:%d" %(server_addr, port)
     response = requests.post(server_url, data={'x': x, 'y': y})
     print(response.status_code, response.reason)
+
+    # check the results of the fire message
     if(response.status_code == 200):
-        if(response.reason.contains("1")):
+        if(response.reason[len(response.reason) - 1:] == '1'):
             print("You hit a ship!")
-        elif(response.reason.contains("0")):
-            print("You Missed")
+        elif(response.reason[len(response.reason) - 1:] == '0'):
+            print("You missed")
+        else:
+            print("You sunk a ship!")
     elif(response.status_code == 410):
         print("You already hit that spot!")
-    elif(response.status_code == 400):
+    elif(response.status_code == 404):
         print("You're shot was out of bounds!")
     else:
         print("There was an error!")
 
+    # update record of players shots on opponent board
+    requests.get(server_url + "/opponent_board.html")
 
-    #update opponent board
-    response = requests.get(server_url + "/opponent_board.html")
-    print(response.status_code, response.reason)
-
-#start of program
+# start of program
 if __name__ == '__main__':
     handleArgs()
     fire()
