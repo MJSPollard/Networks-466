@@ -4,9 +4,11 @@ import sys
 class Board:
     def __init__(self):
         self.board_array = []
+        self.opp_board_array = []
         self.hit_count = {'C': 5, 'B': 4, 'R': 3, 'S': 3, 'D': 2}
         print(self.hit_count)
 
+    # read the board from file into an array
     def read_in_board(self, fileName):
         try:
             with open(fileName, 'r+') as myfile:
@@ -19,18 +21,39 @@ class Board:
             print("Error, cannot find board file")
             sys.exit(0)
 
-        return(self.board_array)
+    # returns the players own board.
+    def get_board(self):
+        return self.board_array
 
-    def print_board(self):
-        # print(np.matrix(self.board_as_list))
-        print("hello")
+    # formats and returns the opponent board.
+    def get_opp_board(self):
+        temp = []
+        for i in range(100):
+            temp.append('E')
 
+        self.opp_board_array = np.reshape(temp, (-1, 10))
+
+        print(self.opp_board_array)
+
+        for y in range(9):
+            for x in range(9):
+                if(self.board_array[x][y] == 'X'):
+                    self.opp_board_array[x][y] = 'X'
+                elif(self.board_array[x][y] == 'O'):
+                    self.opp_board_array[x][y] = 'O'
+                else:
+                    self.opp_board_array[x][y] = '_'
+        return self.opp_board_array
+
+
+    # determine where the client fired on the board
     def check_hit(self, x, y):
         if(x < 0 or x > 9 or y < 0 or y > 9):
             return "OUT_OF_BOUNDS"
         if(self.board_array[x][y] == '_'):
             return "MISS"
-        if(self.board_array[x][y] == 'X'):
+            self.board_array[x][y] = 'O'
+        if(self.board_array[x][y] == 'X' or self.board_array[x][y] == 'O'):
             return "ALREADY_HIT"
         else:
             if(self.board_array[x][y] == 'C'):
