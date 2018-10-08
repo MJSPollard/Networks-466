@@ -1,5 +1,5 @@
 import argparse
-import RDT
+import rdt_3_0
 import time
 
 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     timeout = 100 #close connection if no new data within 5 seconds
     time_of_last_data = time.time()
     
-    rdt = RDT.RDT('server', None, args.port)
+    rdt = rdt_3_0.RDT('server', None, args.port)
     while(True):
         #try to receiver message before timeout
         msg_S = rdt.rdt_1_0_receive()

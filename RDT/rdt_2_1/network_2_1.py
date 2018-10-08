@@ -3,7 +3,7 @@ import socket
 import threading
 from time import sleep
 import random
-import RDT
+import rdt_2_1
 
 
 
@@ -49,20 +49,20 @@ class NetworkLayer:
         if self.collect_thread:
             self.stop = True
             self.collect_thread.join()
-        
+
 
     def __del__(self):
         if self.sock is not None: self.sock.close()
         if self.conn is not None: self.conn.close()
 
-        
+
     def udt_send(self, msg_S):
         #return without sending if the packet is being dropped
         if random.random() < self.prob_pkt_loss:
             return
         #corrupt a packet
         if random.random() < self.prob_byte_corr:
-            start = random.randint(RDT.Packet.length_S_length,len(msg_S)-5) #make sure we are not corrupting the length field, 
+            start = random.randint(rdt_2_1.Packet.length_S_length,len(msg_S)-5) #make sure we are not corrupting the length field, 
                                                                             #since that makes life really difficult
             num = random.randint(1,5)
             repl_S = ''.join(random.sample('XXXXX', num)) #sample length >= num
@@ -108,8 +108,7 @@ class NetworkLayer:
             ret_S = self.buffer_S
             self.buffer_S = ''
         return ret_S
-    
- 
+
 
 if __name__ == '__main__':
     parser =  argparse.ArgumentParser(description='Network layer implementation.')
@@ -130,9 +129,6 @@ if __name__ == '__main__':
         print(network.udt_receive())
         network.udt_send('MSG_FROM_SERVER')
         network.disconnect()
-        
-    
-    
-    
-    
-    
+
+
+

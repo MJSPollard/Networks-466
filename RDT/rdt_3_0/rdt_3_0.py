@@ -1,4 +1,4 @@
-import Network
+import network_3_0
 import argparse
 from time import sleep
 import hashlib
@@ -59,7 +59,7 @@ class RDT:
     byte_buffer = '' 
 
     def __init__(self, role_S, server_S, port):
-        self.network = Network.NetworkLayer(role_S, server_S, port)
+        self.network = network_3_0.NetworkLayer(role_S, server_S, port)
     
     def disconnect(self):
         self.network.disconnect()
@@ -88,19 +88,13 @@ class RDT:
             #remove the packet bytes from the buffer
             self.byte_buffer = self.byte_buffer[length:]
             #if this was the last packet, will return on the next iteration
-            
-    
-    def rdt_2_1_send(self, msg_S):
-        pass
-        
-    def rdt_2_1_receive(self):
-        pass
-    
+
     def rdt_3_0_send(self, msg_S):
-        pass
-        
+        p = Packet(self.seq_num, msg_S)
+
     def rdt_3_0_receive(self):
-        pass
+        ret_S = None
+        byte_S = self.network.udt_receive()
         
 
 if __name__ == '__main__':

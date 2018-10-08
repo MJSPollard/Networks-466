@@ -1,8 +1,7 @@
-import Network
+import network_2_1
 import argparse
 from time import sleep
 import hashlib
-
 
 class Packet:
     ## the number of bytes used to store packet length
@@ -59,16 +58,16 @@ class RDT:
     byte_buffer = '' 
 
     def __init__(self, role_S, server_S, port):
-        self.network = Network.NetworkLayer(role_S, server_S, port)
+        self.network = network_2_1.NetworkLayer(role_S, server_S, port)
     
     def disconnect(self):
         self.network.disconnect()
-        
+
     def rdt_1_0_send(self, msg_S):
         p = Packet(self.seq_num, msg_S)
         self.seq_num += 1
         self.network.udt_send(p.get_byte_S())
-        
+
     def rdt_1_0_receive(self):
         ret_S = None
         byte_S = self.network.udt_receive()
@@ -88,20 +87,14 @@ class RDT:
             #remove the packet bytes from the buffer
             self.byte_buffer = self.byte_buffer[length:]
             #if this was the last packet, will return on the next iteration
-            
-    
+
     def rdt_2_1_send(self, msg_S):
-        pass
-        
+        p = Packet(self.seq_num, msg_S)
+
     def rdt_2_1_receive(self):
-        pass
-    
-    def rdt_3_0_send(self, msg_S):
-        pass
-        
-    def rdt_3_0_receive(self):
-        pass
-        
+        ret_S = None
+        byte_S = self.network.udt_receive()
+
 
 if __name__ == '__main__':
     parser =  argparse.ArgumentParser(description='RDT implementation.')
