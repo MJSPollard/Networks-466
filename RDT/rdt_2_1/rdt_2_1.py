@@ -2,6 +2,8 @@ import network_2_1
 import argparse
 from time import sleep
 import hashlib
+from datetime import datetime
+import sys
 
 class Packet:
     ## the number of bytes used to store packet length
@@ -89,11 +91,60 @@ class RDT:
             #if this was the last packet, will return on the next iteration
 
     def rdt_2_1_send(self, msg_S):
-        p = Packet(self.seq_num, msg_S)
+        packet = Packet(self.seq_num, msg_S)
+        print("Packet Sequence Number = " + self.seq_num)
+ 
+        # wait for packet to be sent
+        while True:
+
+             # init the response to an empty string
+            response = ""
+
+            # Attempt to send the packet.
+            self.network.udt_send(packet.get_byte_S())
+
+            # wait for some sort of response, exit on 5 second time out
+            start_time = datetime.now()
+            while(response == ""):
+                response = self.network.udt_receive()
+                if((datetime.now() - start_time) > 5):
+                    print("rdt_2_1 waiting for response timed out")
+                    sys.exit()
+
+            # extract info from response
+            length = int(response[:Packet.length_S_length])
+            packet_info = Packet.from_byte_S(response[:length])
+            resp = packet_info.msg_S
+
+            # check type of response
+            if(self.isNAK(resp)):
+                print("NAK received, send packet again")
+            elif(self.isACK(resp)):
+                print("ACK received, move on to next packet")
+                self.seq_num += 1
+                break
+            else:
+                print("aww fuck nak or ack might be corrupted")
 
     def rdt_2_1_receive(self):
         ret_S = None
         byte_S = self.network.udt_receive()
+        self.byte_buffer += byte_S
+
+    # check if the packet contains a NAK response
+    def isNAK(self, response):
+        return (response == 0)
+    
+    # check if the packet contains an ACK response
+    def isACK(self, response):
+        return (response == 1)
+    
+    # check if the packet is corrupted
+    def isCorrupted(self, packet):
+        if(Packet.corrupt(packet)):
+            return True
+        else:
+            return False
 
 
 if __name__ == '__main__':
@@ -107,13 +158,13 @@ if __name__ == '__main__':
     if args.role == 'client':
         rdt.rdt_1_0_send('MSG_FROM_CLIENT')
         sleep(2)
-        print(rdt.rdt_1_0_receive())
+        print(rdt.rdt_2_1_receive())
         rdt.disconnect()
         
         
     else:
         sleep(1)
-        print(rdt.rdt_1_0_receive())
+        print(rdt.rdt_2_1_receive())
         rdt.rdt_1_0_send('MSG_FROM_SERVER')
         rdt.disconnect()
         
