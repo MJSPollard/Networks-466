@@ -2,7 +2,7 @@ import network_2_1
 import argparse
 from time import sleep
 import hashlib
-from datetime import datetime
+import datetime
 import sys
 
 class Packet:
@@ -92,7 +92,7 @@ class RDT:
 
     def rdt_2_1_send(self, msg_S):
         packet = Packet(self.seq_num, msg_S)
-        print("Packet Sequence Number = " + self.seq_num)
+        print("Packet Sequence Number = ", self.seq_num)
  
         # wait for packet to be sent
         while True:
@@ -104,17 +104,18 @@ class RDT:
             self.network.udt_send(packet.get_byte_S())
 
             # wait for some sort of response, exit on 5 second time out
-            start_time = datetime.now()
+            # start_time = datetime.datetime.now()
             while(response == ""):
                 response = self.network.udt_receive()
-                if((datetime.now() - start_time) > 5):
-                    print("rdt_2_1 waiting for response timed out")
-                    sys.exit()
+                # if((datetime.datetime.now() - start_time) > datetime.timedelta(seconds = 1)):
+                #     print("rdt_2_1 waiting for response timed out")
+                #     sys.exit()
 
             # extract info from response
             length = int(response[:Packet.length_S_length])
             packet_info = Packet.from_byte_S(response[:length])
             resp = packet_info.msg_S
+            print("resp = ", resp)
 
             # check type of response
             if(self.isNAK(resp)):
@@ -130,6 +131,38 @@ class RDT:
         ret_S = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
+        #keep extracting packets - if reordered, could get more than one
+        print("In receive")
+        print("length = ", len(self.byte_buffer))
+        while True:
+            #check if we have received enough bytes
+            if(len(self.byte_buffer) < Packet.length_S_length):
+                return ret_S #not enough bytes to read packet length
+
+            #extract length of packet
+            length = int(self.byte_buffer[:Packet.length_S_length])
+            if len(self.byte_buffer) < length:
+                return ret_S #not enough bytes to read the whole packet
+
+            # check if the packet is corrupted
+            if(self.isCorrupted(self.byte_buffer)):
+                print("The Packet has been corrupted, sending NAK")
+                nak = Packet(self.seq_num, "0") #send which packet is corrupted
+                self.network.udt_send(nak.get_byte_S())
+
+            else:
+                #extract the data from the packet and put into ret_S
+                p = Packet.from_byte_S(self.byte_buffer[0:length])
+
+                print("The Packet is all good dawg, sending ACK")
+                nak = Packet(self.seq_num, "1") #send which packet is corrupted
+                self.network.udt_send(nak.get_byte_S())
+
+                ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+                #remove the packet bytes from the buffer
+                self.byte_buffer = self.byte_buffer[length:]
+                #if this was the last packet, will return on the next iteration
+
 
     # check if the packet contains a NAK response
     def isNAK(self, response):
