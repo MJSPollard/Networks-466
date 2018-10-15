@@ -11,7 +11,7 @@ import rdt_3_0
 class NetworkLayer:
     #configuration parameters
     prob_pkt_loss = -1
-    prob_byte_corr = .5
+    prob_byte_corr = .33
     prob_pkt_reorder = -1
     
     #class variables
@@ -76,7 +76,6 @@ class NetworkLayer:
                 else:
                     msg_S += self.reorder_msg_S
                     self.reorder_msg_S = None
-        print(myboolean)
         #keep calling send until all the bytes are transferred
         totalsent = 0
         while totalsent < len(msg_S):
