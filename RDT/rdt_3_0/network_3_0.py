@@ -10,9 +10,9 @@ import rdt_3_0
 ## Provides an abstraction for the network layer
 class NetworkLayer:
     #configuration parameters
-    prob_pkt_loss = 0
-    prob_byte_corr = 0
-    prob_pkt_reorder = 0
+    prob_pkt_loss = -1
+    prob_byte_corr = .5
+    prob_pkt_reorder = -1
     
     #class variables
     sock = None
@@ -56,26 +56,27 @@ class NetworkLayer:
         if self.conn is not None: self.conn.close()
 
         
-    def udt_send(self, msg_S):
-        #return without sending if the packet is being dropped
-        if random.random() < self.prob_pkt_loss:
-            return
-        #corrupt a packet
-        if random.random() < self.prob_byte_corr:
-            start = random.randint(rdt_3_0.Packet.length_S_length,len(msg_S)-5) #make sure we are not corrupting the length field, 
-                                                                            #since that makes life really difficult
-            num = random.randint(1,5)
-            repl_S = ''.join(random.sample('XXXXX', num)) #sample length >= num
-            msg_S = msg_S[:start]+repl_S+msg_S[start+num:]
-        #reorder packets - either hold a packet back, or if one held back then send both
-        if random.random() < self.prob_pkt_reorder or self.reorder_msg_S:
-            if self.reorder_msg_S is None:
-                self.reorder_msg_S = msg_S
-                return None
-            else:
-                msg_S += self.reorder_msg_S
-                self.reorder_msg_S = None
-                
+    def udt_send(self, msg_S, myboolean):
+        if myboolean:
+            #return without sending if the packet is being dropped
+            if random.random() < self.prob_pkt_loss:
+                return
+            #corrupt a packet
+            if random.random() < self.prob_byte_corr:
+                start = random.randint(rdt_3_0.Packet.length_S_length,len(msg_S)-5) #make sure we are not corrupting the length field,
+                                                                                #since that makes life really difficult
+                num = random.randint(1,5)
+                repl_S = ''.join(random.sample('XXXXX', num)) #sample length >= num
+                msg_S = msg_S[:start]+repl_S+msg_S[start+num:]
+            #reorder packets - either hold a packet back, or if one held back then send both
+            if random.random() < self.prob_pkt_reorder or self.reorder_msg_S:
+                if self.reorder_msg_S is None:
+                    self.reorder_msg_S = msg_S
+                    return None
+                else:
+                    msg_S += self.reorder_msg_S
+                    self.reorder_msg_S = None
+        print(myboolean)
         #keep calling send until all the bytes are transferred
         totalsent = 0
         while totalsent < len(msg_S):
