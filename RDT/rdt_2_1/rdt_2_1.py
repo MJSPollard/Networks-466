@@ -67,10 +67,11 @@ class RDT:
 
     def rdt_2_1_send(self, msg_S):
         p = Packet(self.seq_num, msg_S)
+        current_seq = self.seq_num
         self.network.udt_send(p.get_byte_S(), True)
  
         #wait for response 
-        while True:
+        while current_seq == self.seq_num:
             
             # add bytes to the byte buffer
             self.byte_buffer += self.network.udt_receive()
@@ -93,27 +94,29 @@ class RDT:
                 print("sender: corrupt ack or nak")
                 self.byte_buffer = self.byte_buffer[length:]
                 self.network.udt_send(p.get_byte_S(), True)
-                self.seq_num -= 1
             else:
                 response = Packet.from_byte_S(self.byte_buffer[0:length])
                 self.byte_buffer = self.byte_buffer[length:]
 
+                # print("response seq num = ",response.seq_num)
+                # print("self seq num = ",self.seq_num)
                 # check type of response
+                if response.seq_num != self.seq_num:
+                    print("reciever behind sender")
+                    ack = Packet(response.seq_num, "1")
+                    self.network.udt_send(ack.get_byte_S(), True)
+
+                # print("response seq num2 = ",response.seq_num)
+                # print("self seq num2 = ",self.seq_num)
+
                 if(response.seq_num == self.seq_num):
                     if response.msg_S == "0":
                         print("RECEIVED NAK")
-                        self.byte_buffer = self.byte_buffer[length:]
                         self.network.udt_send(p.get_byte_S(), True)
-                    elif response.msg_S == "1":)
+                    elif response.msg_S == "1":
                         print("RECEIVED ACK")
                         self.seq_num += 1
                         break
-                elif response.seq_num < self.seq_num
-                    test = Packet(response.seq_num, "1")
-                    self.network.udt_send(test.get_byte_S(), True)
-                else:
-                    print("fuck")
-                    self.byte_buffer = self.byte_buffer[length:]
 
     def rdt_2_1_receive(self):
         ret_S = None
@@ -136,23 +139,18 @@ class RDT:
                 print("SENDING NAK")
                 nak = Packet(self.seq_num, "0")
                 self.network.udt_send(nak.get_byte_S(), False)
-
             else:
                 #extract the data from the packet and put into ret_S
                 print("SENDING ACK")
                 p = Packet.from_byte_S(self.byte_buffer[0:length])
 
-                if p.seq_num > self.seq_num:
-                    print('RECEIVER: Already received packet.  ACK again.')
-                    # Send another ACK
-                    answer = Packet(p.seq_num, "1")
-                    self.network.udt_send(answer.get_byte_S(), False)
-
                 if p.seq_num == self.seq_num:
-                    self.byte_buffer = self.byte_buffer[length:]
-                    ack = Packet(p.seq_num, "1") 
-                    self.network.udt_send(ack.get_byte_S(), False)
+                    ack = Packet(self.seq_num, "1")
                     self.seq_num += 1
+                    self.network.udt_send(ack.get_byte_S(), False)
+                else:
+                    ack = Packet(p.seq_num, "1")
+                    self.network.udt_send(ack.get_byte_S(), False)
 
                 ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
             self.byte_buffer = self.byte_buffer[length:]

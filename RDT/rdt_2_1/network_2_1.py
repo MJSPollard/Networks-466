@@ -56,8 +56,8 @@ class NetworkLayer:
         if self.conn is not None: self.conn.close()
 
 
-    def udt_send(self, msg_S, myboolean):
-        if myboolean:
+    def udt_send(self, msg_S, boolean):
+        if boolean:
             #return without sending if the packet is being dropped
             if random.random() < self.prob_pkt_loss:
                 return
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     
     network = NetworkLayer(args.role, args.server, args.port)
     if args.role == 'client':
-        network.udt_send('MSG_FROM_CLIENT')
+        network.udt_send('MSG_FROM_CLIENT', True)
         sleep(2)
         print(network.udt_receive())
         network.disconnect()
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     else:
         sleep(1)
         print(network.udt_receive())
-        network.udt_send('MSG_FROM_SERVER')
+        network.udt_send('MSG_FROM_SERVER', True)
         network.disconnect()
 
 
