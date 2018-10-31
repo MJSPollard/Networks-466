@@ -68,44 +68,28 @@ class RDT:
     
     def disconnect(self):
         self.network.disconnect()
-        
-    # def rdt_1_0_send(self, msg_S):
-    #     p = Packet(self.seq_num, msg_S)
-    #     self.seq_num += 1
-    #     self.network.udt_send(p.get_byte_S())
-    #
-    # def rdt_1_0_receive(self):
-    #     ret_S = None
-    #     byte_S = self.network.udt_receive()
-    #     self.byte_buffer += byte_S
-    #     #keep extracting packets - if reordered, could get more than one
-    #     while True:
-    #         #check if we have received enough bytes
-    #         if(len(self.byte_buffer) < Packet.length_S_length):
-    #             return ret_S #not enough bytes to read packet length
-    #         #extract length of packet
-    #         length = int(self.byte_buffer[:Packet.length_S_length])
-    #         if len(self.byte_buffer) < length:
-    #             return ret_S #not enough bytes to read the whole packet
-    #         #create packet from buffer content and add to return string
-    #         p = Packet.from_byte_S(self.byte_buffer[0:length])
-    #         ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
-    #         #remove the packet bytes from the buffer
-    #         self.byte_buffer = self.byte_buffer[length:]
-    #         #if this was the last packet, will return on the next iteration
 
+    # Implementation of RDT 3.0 send method
     def rdt_3_0_send(self, msg_S):
+
+        # Create packet and set sequence number
         p = Packet(self.seq_num, msg_S)
         current_seq = self.seq_num
+
+        # Send packet over udt network layer
         self.network.udt_send(p.get_byte_S(), True)
+
+        # Attributes for processing a timeout by the client
         sent_time = time.time()
         timer = 3;
 
         # wait for response
         while current_seq == self.seq_num:
 
+            # Concatenate bytes to byte buffer
             self.byte_buffer += self.network.udt_receive()
 
+            # If no response after given time occurs, refresh buffer and resend packet
             if sent_time + timer - time.time() < 0 and len(self.byte_buffer) == 0:
                 print("TIMEOUT")
                 self.byte_buffer = ''
@@ -126,14 +110,18 @@ class RDT:
             else:
                 continue
 
+            # If packet is corrupted, set sequence number back and resend packet
             if Packet.corrupt((self.byte_buffer[0:length])):
                 self.byte_buffer = self.byte_buffer[length:]
                 self.network.udt_send(p.get_byte_S(), True)
                 self.seq_num -= 1
+
             else:
+                # If valid Packet, determine response
                 ack = Packet.from_byte_S(self.byte_buffer[0:length])
                 self.byte_buffer = ''
 
+                # Determine either ACK or NAK from response packet
                 if ack.seq_num == self.seq_num:
                     if ack.msg_S == "0":
                         print("RECEIVED NAK")
@@ -143,7 +131,7 @@ class RDT:
                         self.seq_num += 1
                         break
 
-
+    # Implementation of RDT 3.0 send method
     def rdt_3_0_receive(self):
         ret_S = None
         byte_S = self.network.udt_receive()
@@ -161,13 +149,25 @@ class RDT:
             if len(self.byte_buffer) < length:
                 break #not enough bytes to read the whole packet
 
+            # If packet is corrupt, send NAK packet
             if Packet.corrupt(self.byte_buffer):
                 # print ("Corrupted")
                 nack = Packet(self.seq_num, "0")
                 self.network.udt_send(nack.get_byte_S(), False)
             else:
+                # Create packet from byte buffer message and send appropriate acknowledgement
                 p = Packet.from_byte_S(self.byte_buffer[0:length])
 
+                # Check duplicate packet
+                if self.seq_num in self.seq_num_list:
+                    # Will be printed from the server side
+                    print("Duplicate packet")
+                    ack = Packet(self.seq_num, "1")
+                    self.network.udt_send(ack.get_byte_S(), False)
+                    break
+                self.seq_num_list.append(self.seq_num)
+
+                # check sequence numbers and send ACK packet
                 if p.seq_num == self.seq_num:
                     ack = Packet(self.seq_num, "1")
                     self.seq_num += 1
@@ -176,9 +176,7 @@ class RDT:
                     ack = Packet(p.seq_num, "1")
                     self.network.udt_send(ack.get_byte_S(), False)
 
-                # ack = Packet(self.seq_num, "1")
-                # self.network.udt_send(ack.get_byte_S(), False)
-
+                # Retrieve message from the packet
                 ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
 
             #remove the packet bytes from the buffer
