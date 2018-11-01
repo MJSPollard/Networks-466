@@ -47,7 +47,22 @@ if __name__ == '__main__':
     
     #create some send events    
     for i in range(3):
-        client.udt_send(2, 'Sample data %d' % i)
+        data = ('ZxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO')
+
+        # if the data length is large than 40, split it up and send it in multiple parts
+        if(len(data) > 40 ):
+            firstChar = 0
+            lastChar = 40
+            while True:
+                if(lastChar > len(data)):
+                    client.udt_send(2, data[firstChar:])
+                    break
+                else:
+                    client.udt_send(2, data[firstChar:lastChar])
+                firstChar = firstChar + 40
+                lastChar = lastChar + 40
+        else:
+            client.udt_send(2, data)
     
     
     #give the network sufficient time to transfer all packets before quitting
