@@ -29,9 +29,9 @@ if __name__ == '__main__':
     router_a = network_3.Router(name='A', intf_count=2,
                                 max_queue_size=router_queue_size, routing_table={3:0, 4:1})
     router_b = network_3.Router(name='B', intf_count=1,
-                                max_queue_size=router_queue_size, routing_table={3:0})
+                                max_queue_size=router_queue_size, routing_table={3:0, 4:0})
     router_c = network_3.Router(name='C', intf_count=1,
-                                max_queue_size=router_queue_size, routing_table={4:0})
+                                max_queue_size=router_queue_size, routing_table={3:0, 4:0})
     router_d = network_3.Router(name='D', intf_count=2,
                                 max_queue_size=router_queue_size, routing_table={3:0, 4:1})
     object_L.append(router_a)
@@ -80,8 +80,8 @@ if __name__ == '__main__':
     hosts = [host_1, host_2]
     recipients = [3, 4]
 
-    for i in range(len(hosts)-1):
-
+    for i in range(len(hosts)):
+        print(i)
     # if the data length is large than 40, split it up and send it in multiple parts
         if(len(data) > 40 ):
             firstChar = 0
