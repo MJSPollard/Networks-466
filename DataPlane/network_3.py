@@ -140,6 +140,7 @@ class Router:
                     try:
                         out = self.routing_table[to_addr]
                     except:
+                        print("%s: Do not have connection to %i" % (self, to_addr))
                         break
                     self.out_intf_L[out].put(p.to_byte_S(), True)
                     print('%s: forwarding packet "%s" from interface %d to %d with mtu %d' \
