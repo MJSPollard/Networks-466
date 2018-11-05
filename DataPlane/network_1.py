@@ -80,10 +80,27 @@ class Host:
     ## create a packet and enqueue for transmission
     # @param dst_addr: destination address for the packet
     # @param data_S: data being transmitted to the network layer
-    def udt_send(self, dst_addr, data_S):
-        p = NetworkPacket(dst_addr, data_S)
-        self.out_intf_L[0].put(p.to_byte_S()) #send packets always enqueued successfully
-        print('%s: sending packet "%s" on the out interface with mtu=%d' % (self, p, self.out_intf_L[0].mtu))
+    def udt_send(self, dst_addr, data_S, MTU_limit):
+        if(len(data_S) > MTU_limit):
+            firstChar = 0
+            lastChar = MTU_limit
+            while True:
+                if(lastChar > len(data_S)):
+                    p = NetworkPacket(dst_addr, data_S[firstChar:])
+                    self.out_intf_L[0].put(p.to_byte_S()) #send packets always enqueued successfully
+                    print('%s: sending packet "%s" on the out interface with mtu=%d' % (self, p, self.out_intf_L[0].mtu))
+                    break
+                else:
+                    p = NetworkPacket(dst_addr, data_S[firstChar:lastChar])
+                    self.out_intf_L[0].put(p.to_byte_S()) #send packets always enqueued successfully
+
+                firstChar = firstChar + MTU_limit
+                lastChar = lastChar + MTU_limit
+                print('%s: sending packet "%s" on the out interface with mtu=%d' % (self, p, self.out_intf_L[0].mtu))
+        else:
+            p = NetworkPacket(dst_addr, data_S)
+            self.out_intf_L[0].put(p.to_byte_S()) #send packets always enqueued successfully
+            print('%s: sending packet "%s" on the out interface with mtu=%d' % (self, p, self.out_intf_L[0].mtu))
         
     ## receive packet from the network layer
     def udt_receive(self):
