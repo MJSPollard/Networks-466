@@ -30,7 +30,7 @@ if __name__ == '__main__':
                                 max_queue_size=router_queue_size, routing_table={3:0, 4:1})
     router_b = network_3.Router(name='B', intf_count=1,
                                 max_queue_size=router_queue_size, routing_table={3:0})
-    router_c = network_3.Router(name='C', intf_count=2,
+    router_c = network_3.Router(name='C', intf_count=1,
                                 max_queue_size=router_queue_size, routing_table={4:0})
     router_d = network_3.Router(name='D', intf_count=2,
                                 max_queue_size=router_queue_size, routing_table={3:0, 4:1})
@@ -48,11 +48,11 @@ if __name__ == '__main__':
     link_layer.add_link(link_3.Link(host_1, 0, router_a, 0, 50))
     link_layer.add_link(link_3.Link(host_2, 0, router_a, 0, 50))
     link_layer.add_link(link_3.Link(router_a, 0, router_b, 0, 50))
-    link_layer.add_link(link_3.Link(router_a, 0, router_c, 0, 50))
+    link_layer.add_link(link_3.Link(router_a, 1, router_c, 0, 50))
     link_layer.add_link(link_3.Link(router_b, 0, router_d, 0, 50))
     link_layer.add_link(link_3.Link(router_c, 0, router_d, 0, 50))
     link_layer.add_link(link_3.Link(router_d, 0, host_3, 0, 50))
-    link_layer.add_link(link_3.Link(router_d, 0, host_4, 0, 50))
+    link_layer.add_link(link_3.Link(router_d, 1, host_4, 0, 50))
 
 
 
