@@ -32,7 +32,7 @@ if __name__ == '__main__':
     link_layer.add_link(link_2.Link(client, 0, router_a, 0, 50))
 
     #change from 50 to 30 for part 2
-    link_layer.add_link(link_2.Link(router_a, 0, server, 0, 50))
+    link_layer.add_link(link_2.Link(router_a, 0, server, 0, 30))
 
 
     #start all the objects
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     #send three messages
     for i in range(1):
-        data = ('This sentence has a purpose to just determine where a packet has been segmented.')
+        data = ('This sentence has a purpose to just determine where a packet has been segmented because its important.')
         client.udt_send(2, data, 40) # send to host 2 with MTU limit of 40
 
 
