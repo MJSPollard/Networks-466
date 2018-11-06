@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     #send messages to host 2
     for i in range(1):
-        data = ('ZxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO')
+        data = ('This sentence has a purpose to just determine where a packet has been segmented because its important.')
         client.udt_send(2, data, 40) # send to host 2 with MTU limit of 40
 
     #give the network sufficient time to transfer all packets before quitting
