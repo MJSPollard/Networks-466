@@ -141,7 +141,10 @@ class Router:
         #save neighbors and interfeces on which we connect to them
         self.cost_D = cost_D    # {neighbor: {interface: cost}}
         #TODO: set up the routing table for connected hosts
-        self.rt_tbl_D = {}      # {destination: {router: cost}}
+        self.rt_tbl_D = self.rt_tbl_D = {"H1": {"RA": None, "RB": None},
+            "H2": {"RA": None, "RB": None},
+            "RA": {"RA": None, "RB": None},
+            "RB": {"RA": None, "RB": None}}       # {destination: {router: cost}}
         print('%s: Initialized routing table' % self)
         self.print_routes()
 
@@ -209,34 +212,26 @@ class Router:
 
     ## Print routing table
     def print_routes(self):
-        #TODO: print the routes as a two dimensional table
         print("cost_D: ")
         print(self.cost_D)
         print("rt_tbl_D: ")
         print(self.rt_tbl_D)
         counter = 0
+        '''
         for i in self.cost_D: # {destination   : {router: cost}}
             self.rt_tbl_D[i] = {self.name: self.cost_D[i]}
             counter += 1
+        '''
         print(len(self.rt_tbl_D))
         print(self.rt_tbl_D)
         print(self.rt_tbl_D['H1'])
         print("╒══════╤══════╤══════╤══════╤══════╕")
         print("│  " + self.name + "  │" + "  H1"+ "  │" + "  H2"+ "  │" + "  RA" + "  │" + "  RB" + "  │")
         print("╞══════╪══════╪══════╪══════╪══════╡")
-        print("│  " + "RA" + "  │")
-        for i in range(len(self.rt_tbl_D)):
-            print("  " + self.rt_tbl_D['H1'] + "  │")
-            if(i < len(self.rt_tbl_D) - 1):
-                print("├──────┼──────┼──────┼──────┼──────┤")
-
-        print("│  " + "RB" + "  │")
-        for i in range(len(self.rt_tbl_D) - 1):
-
-            if(i < len(self.rt_tbl_D) - 2):
-                print("├──────┼──────┼──────┼──────┼──────┤")
-            else:
-                print("╘══════╧══════╧══════╧══════╧══════╛")
+        print("│  " + "RA" + "  │" + str(self.rt_tbl_D["H1"]["RA"]).zfill(2)+"  │ "+ str(self.rt_tbl_D["H2"]["RA"]).zfill(2) + " │ "+ str(self.rt_tbl_D["RA"]["RA"]).zfill(2) + " │ "+str(self.rt_tbl_D["RB"]["RA"]).zfill(2)+" │")
+        print("├──────┼──────┼──────┼──────┼──────┤")
+        print("│  " + "RB" + "  │" + str(self.rt_tbl_D["H1"]["RB"]).zfill(2)+"  │ "+ str(self.rt_tbl_D["H2"]["RB"]).zfill(2) + " │ "+ str(self.rt_tbl_D["RA"]["RB"]).zfill(2) + " │ "+str(self.rt_tbl_D["RB"]["RA"]).zfill(2)+" │")
+        print("╘══════╧══════╧══════╧══════╧══════╛")
 
     ## thread target for the host to keep forwarding data
     def run(self):
