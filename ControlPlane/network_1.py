@@ -212,19 +212,6 @@ class Router:
 
     ## Print routing table
     def print_routes(self):
-        print("cost_D: ")
-        print(self.cost_D)
-        print("rt_tbl_D: ")
-        print(self.rt_tbl_D)
-        counter = 0
-        '''
-        for i in self.cost_D: # {destination   : {router: cost}}
-            self.rt_tbl_D[i] = {self.name: self.cost_D[i]}
-            counter += 1
-        '''
-        print(len(self.rt_tbl_D))
-        print(self.rt_tbl_D)
-        print(self.rt_tbl_D['H1'])
         print("╒══════╤══════╤══════╤══════╤══════╕")
         print("│  " + self.name + "  │" + "  H1"+ "  │" + "  H2"+ "  │" + "  RA" + "  │" + "  RB" + "  │")
         print("╞══════╪══════╪══════╪══════╪══════╡")
