@@ -153,7 +153,7 @@ class Router:
             for interface in list(self.cost_D[destination]):
                 cost = int(self.cost_D[destination][interface])
                 # {destination: {router: cost}}
-                self.rt_tbl_D.update({destination: {router: cost}}) 
+                self.rt_tbl_D.update({destination: {router: cost}})
 
         # print(self.rt_tbl_D)
         print('%s: Initialized routing table' % self)
@@ -242,7 +242,7 @@ class Router:
             print("| ", destination, " ", end = '')
         print("|")
 
-#print subsequent rows 
+#print subsequent rows
         #iterate through how many routers/rows there are
         for router in routerList:
             #add row top line
