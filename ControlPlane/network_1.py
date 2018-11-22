@@ -1,8 +1,5 @@
 import queue
 import threading
-from collections import abc
-import sys
-
 
 ## wrapper class for a queue of packets
 class Interface:
@@ -202,7 +199,6 @@ class Router:
     ## send out route update
     # @param i Interface number on which to send out a routing update
     def send_routes(self, i):
-        # TODO: Send out a routing table update
         #create a routing table update packet
         route_update = str(self.rt_tbl_D)
         p = NetworkPacket(0, 'control', route_update)
@@ -220,6 +216,12 @@ class Router:
         #TODO: add logic to update the routing tables and
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
+
+        if p.prot_S == 'control':
+            # use bellman ford equation to update routes and add alter routing table
+            # call send routes to converge the routing tables
+        else:
+            print("Not a control packet")
 
 
     ## Print routing table
