@@ -204,7 +204,8 @@ class Router:
     def send_routes(self, i):
         # TODO: Send out a routing table update
         #create a routing table update packet
-        p = NetworkPacket(0, 'control', 'nothing')
+        route_update = str(self.rt_tbl_D)
+        p = NetworkPacket(0, 'control', route_update)
         try:
             print('%s: sending routing update "%s" from interface %d' % (self, p, i))
             self.intf_L[i].put(p.to_byte_S(), 'out', True)
@@ -230,7 +231,7 @@ class Router:
                 if router not in routerList:
                     routerList.append(router)
 
-#print top line
+        #print top line
         print("╒══════", end = '')
         #create columns depending on num of destinations
         for destination in list(self.rt_tbl_D):
@@ -242,7 +243,7 @@ class Router:
             print("| ", destination, " ", end = '')
         print("|")
 
-#print subsequent rows
+        #print subsequent rows
         #iterate through how many routers/rows there are
         for router in routerList:
             #add row top line
@@ -258,7 +259,7 @@ class Router:
                     print("|  ", cost, " ", end = '')
             print("|")
 
-#print bottom line
+        #print bottom line
         print("╘══════", end = '')
         #create columns depending on num of destinations
         for destinations in list(self.rt_tbl_D):
