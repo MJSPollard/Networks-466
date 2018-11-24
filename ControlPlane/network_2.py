@@ -195,11 +195,13 @@ class Router:
             #get destination name
             #loop through cost_D until destination name matches the index
             #get that interface to send out on
-            for destination in list(self.cost_D):
-                for interface in list(self.cost_D[destination]):
-                    if(interface > 0):
-                        intf_I = interface
-                        
+            if(i > 0):
+                intf_I = 0
+            else:
+                for destination in list(self.cost_D):
+                    for interface in list(self.cost_D[destination]):
+                        if(interface > 0):
+                            intf_I = interface
             self.intf_L[intf_I].put(p.to_byte_S(), 'out', True)
             print('%s: forwarding packet "%s" from interface %d to %d' % \
                 (self, p, i, intf_I))
