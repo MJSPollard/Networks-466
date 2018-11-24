@@ -189,6 +189,16 @@ class Router:
             # TODO: Here you will need to implement a lookup into the
             # forwarding table to find the appropriate outgoing interface
             # for now we assume the outgoing interface is 1
+            #{neighbor: {interface: cost}} -- cost_D
+            #{destination: {router: cost}} -- rt_tbl_D
+            '''
+            print('hi ' + self.name)
+            #print(self.cost_D)
+            destination = self.rt_tbl_D[self.name]
+            print(destination)
+            intf_I = self.cost_D[destination][0]
+            print(intf_I)
+            '''
             self.intf_L[1].put(p.to_byte_S(), 'out', True)
             print('%s: forwarding packet "%s" from interface %d to %d' % \
                 (self, p, i, 1))
@@ -217,6 +227,7 @@ class Router:
         #TODO: add logic to update the routing tables and
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
+<<<<<<< HEAD
         needsUpdate = False
         
         if p.prot_S == 'control':
@@ -273,6 +284,12 @@ class Router:
             # print("\n")
             if needsUpdate:
                 self.send_routes(curLink)
+=======
+        if p.prot_S == 'control':
+            # use bellman ford equation to update routes and add alter routing table
+            # call send routes to converge the routing tables
+            print("control")
+>>>>>>> 548a74d2e7c89fd34d790ff532be7f8a1cda517c
         else:
             print("Not a control packet")
 
