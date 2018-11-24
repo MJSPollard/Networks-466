@@ -189,8 +189,6 @@ class Router:
             # TODO: Here you will need to implement a lookup into the
             # forwarding table to find the appropriate outgoing interface
             # for now we assume the outgoing interface is 1
-            #{neighbor: {interface: cost}} -- cost_D
-            #{destination: {router: cost}} -- rt_tbl_D
             self.intf_L[1].put(p.to_byte_S(), 'out', True)
             print('%s: forwarding packet "%s" from interface %d to %d' % \
                 (self, p, i, 1))
@@ -220,7 +218,7 @@ class Router:
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
         needsUpdate = False
-        
+
         if p.prot_S == 'control':
             routingTable = ast.literal_eval(p.data_S) #convert routing string back to dictionary
 
@@ -243,14 +241,14 @@ class Router:
             # print("\ntable = ",self.rt_tbl_D)
             # print("\ncost_D = ", self.cost_D)
             curLinkCost = 0
-            curLink = 0 
+            curLink = 0
             curPlace = ""
 
             #might need to encapsulate in larger loop for more than 2 routers
             #get cost of link to router
             for neighbor in list(self.cost_D):                                      #get the neighbors of current router
                 if neighbor[0] == 'R':                                               # if the neighbor is another router
-                    for interface in list(self.cost_D[neighbor]):                    # record the link cost and router info 
+                    for interface in list(self.cost_D[neighbor]):                    # record the link cost and router info
                         curLinkCost = (curLinkCost + int(self.cost_D[neighbor][interface]))
                         curLink = interface
                         curPlace = neighbor

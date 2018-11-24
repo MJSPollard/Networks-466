@@ -1,6 +1,6 @@
 import queue
 import threading
-
+import ast
 
 ## wrapper class for a queue of packets
 class Interface:
@@ -136,12 +136,24 @@ class Router:
     def __init__(self, name, cost_D, max_queue_size):
         self.stop = False #for thread termination
         self.name = name
+        router = self.name
         #create a list of interfaces
         self.intf_L = [Interface(max_queue_size) for _ in range(len(cost_D))]
         #save neighbors and interfeces on which we connect to them
         self.cost_D = cost_D    # {neighbor: {interface: cost}}
-        #TODO: set up the routing table for connected hosts
-        self.rt_tbl_D = {}      # {destination: {router: cost}}
+
+        # add cost of router path to itself to routing table
+        # {destination: {router: cost}}
+        self.rt_tbl_D = {router: {router: 0}}
+
+        # add other possible destinations and cost to routing table
+        for destination in list(self.cost_D):
+            for interface in list(self.cost_D[destination]):
+                cost = int(self.cost_D[destination][interface])
+                # {destination: {router: cost}}
+                self.rt_tbl_D.update({destination: {router: cost}})
+
+        # print(self.rt_tbl_D)
         print('%s: Initialized routing table' % self)
         self.print_routes()
 
@@ -177,17 +189,20 @@ class Router:
             # TODO: Here you will need to implement a lookup into the
             # forwarding table to find the appropriate outgoing interface
             # for now we assume the outgoing interface is 1
-            '''
-            print('hi ' + self.name)
-            #print(self.cost_D)
-            destination = self.rt_tbl_D[self.name]
-            print(destination)
-            intf_I = self.cost_D[destination][0]
-            print(intf_I)
-            '''
-            self.intf_L[1].put(p.to_byte_S(), 'out', True)
+            #{neighbor: {interface: cost}} -- cost_D
+            #{destination: {router: cost}} -- rt_tbl_D
+
+            #get destination name
+            #loop through cost_D until destination name matches the index
+            #get that interface to send out on
+            for destination in list(self.cost_D):
+                for interface in list(self.cost_D[destination]):
+                    if(interface > 0):
+                        intf_I = interface
+                        
+            self.intf_L[intf_I].put(p.to_byte_S(), 'out', True)
             print('%s: forwarding packet "%s" from interface %d to %d' % \
-                (self, p, i, 1))
+                (self, p, i, intf_I))
         except queue.Full:
             print('%s: packet "%s" lost on interface %d' % (self, p, i))
             pass
@@ -196,9 +211,9 @@ class Router:
     ## send out route update
     # @param i Interface number on which to send out a routing update
     def send_routes(self, i):
-        # TODO: Send out a routing table update
         #create a routing table update packet
-        p = NetworkPacket(0, 'control', 'DUMMY_ROUTING_TABLE')
+        route_update = str(self.rt_tbl_D)
+        p = NetworkPacket(0, 'control', route_update)
         try:
             print('%s: sending routing update "%s" from interface %d' % (self, p, i))
             self.intf_L[i].put(p.to_byte_S(), 'out', True)
@@ -213,13 +228,108 @@ class Router:
         #TODO: add logic to update the routing tables and
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
+        needsUpdate = False
+
+        if p.prot_S == 'control':
+            routingTable = ast.literal_eval(p.data_S) #convert routing string back to dictionary
+
+            #add any new discovered destinations and info to routing table
+            for destination in list(routingTable):
+                for router in list(routingTable[destination]):
+                    if destination not in self.rt_tbl_D:
+                        cost = int(routingTable[destination][router])
+                        self.rt_tbl_D.update({destination: {router: cost}})
+                    if router != self.name:
+                        cost = int(routingTable[destination][router])
+                        origRouter = self.name
+                        origCost = self.rt_tbl_D.get(destination).get(origRouter)
+                        if origCost == None:
+                            origCost = 100 # prevent error, large value place holder for when we don't know the path cost yet
+                        self.rt_tbl_D.update({destination: {origRouter: origCost, router: cost}})
+
+            #calculate lowest paths using bellman-ford algorithm
+            #need to get to H1 from RB
+            # print("\ntable = ",self.rt_tbl_D)
+            # print("\ncost_D = ", self.cost_D)
+            curLinkCost = 0
+            curLink = 0
+            curPlace = ""
+
+            #might need to encapsulate in larger loop for more than 2 routers
+            #get cost of link to router
+            for neighbor in list(self.cost_D):                                      #get the neighbors of current router
+                if neighbor[0] == 'R':                                               # if the neighbor is another router
+                    for interface in list(self.cost_D[neighbor]):                    # record the link cost and router info
+                        curLinkCost = (curLinkCost + int(self.cost_D[neighbor][interface]))
+                        curLink = interface
+                        curPlace = neighbor
+
+            #update curLink according to new neighbors
+            for destination in list(self.rt_tbl_D):
+                if destination != router and destination not in self.cost_D and destination != self.name:
+                    for router in list(self.rt_tbl_D[destination]):
+                        if router == curPlace:  # doesn't handle multiple routers to one host
+                            curLinkCost = (curLinkCost + self.rt_tbl_D[destination][router]) #add the link cost to the from new router to host
+
+            #update curLink according to new neighbors
+            for destination in list(self.rt_tbl_D):
+                if destination != router and destination not in self.cost_D:
+                    for router in list(self.rt_tbl_D[destination]):
+                        if router != curPlace:
+                            if(curLinkCost < self.rt_tbl_D[destination][router]):
+                                self.rt_tbl_D[destination][router] = curLinkCost
+                                needsUpdate = True
+
+            # print("\ntable = ",self.rt_tbl_D)
+            # print("\n")
+            if needsUpdate:
+                self.send_routes(curLink)
+        else:
+            print("Not a control packet")
 
 
     ## Print routing table
     def print_routes(self):
-        #TODO: print the routes as a two dimensional table
-        print(self.rt_tbl_D)
+        #determine number of different routers in network
+        routerList = []
+        for destination in list(self.rt_tbl_D):
+            for router in list(self.rt_tbl_D[destination]):
+                if router not in routerList:
+                    routerList.append(router)
 
+        #print top line
+        print("╒══════", end = '')
+        #create columns depending on num of destinations
+        for destination in list(self.rt_tbl_D):
+            print("╤══════",end = '')
+        print("╕")
+        # add top line info
+        print("| ", self.name, " ", end = '')
+        for destination in sorted(self.rt_tbl_D): #use sorted to keep in order
+            print("| ", destination, " ", end = '')
+        print("|")
+
+        #print subsequent rows
+        #iterate through how many routers/rows there are
+        for router in routerList:
+            #add row top line
+            print("╞══════", end = '')
+            for destination in list(self.rt_tbl_D):
+                print("╪══════", end = '')
+            print("╡")
+            #add row info
+            print("| ", router, " ", end = '')
+            for destination in sorted(self.rt_tbl_D):
+                cost = int(self.rt_tbl_D[destination][router])
+                print("|  ", cost, " ", end = '')
+            print("|")
+
+        #print bottom line
+        print("╘══════", end = '')
+        #create columns depending on num of destinations
+        for destinations in list(self.rt_tbl_D):
+            print("╧══════", end = '')
+        print("╛")
 
     ## thread target for the host to keep forwarding data
     def run(self):
