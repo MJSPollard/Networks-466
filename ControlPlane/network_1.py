@@ -227,7 +227,6 @@ class Router:
         #TODO: add logic to update the routing tables and
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
-<<<<<<< HEAD
         needsUpdate = False
         
         if p.prot_S == 'control':
@@ -284,12 +283,6 @@ class Router:
             # print("\n")
             if needsUpdate:
                 self.send_routes(curLink)
-=======
-        if p.prot_S == 'control':
-            # use bellman ford equation to update routes and add alter routing table
-            # call send routes to converge the routing tables
-            print("control")
->>>>>>> 548a74d2e7c89fd34d790ff532be7f8a1cda517c
         else:
             print("Not a control packet")
 
