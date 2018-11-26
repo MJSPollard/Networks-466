@@ -63,7 +63,7 @@ if __name__ == '__main__':
         t.start()
 
     ## compute routing tables
-    router_a.send_routes(1, "control") #one update starts the routing process
+    router_a.send_routes(1) #one update starts the routing process
     sleep(simulation_time)  #let the tables converge
     print("Converged routing tables")
     for obj in object_L:
