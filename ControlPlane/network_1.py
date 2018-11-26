@@ -196,13 +196,16 @@ class Router:
             print('%s: packet "%s" lost on interface %d' % (self, p, i))
             pass
 
-
     ## send out route update
     # @param i Interface number on which to send out a routing update
     def send_routes(self, i):
         #create a routing table update packet
-        route_update = str(self.rt_tbl_D)
-        p = NetworkPacket(0, 'control', route_update)
+        routingUpdate = []
+        for destination in list(self.rt_tbl_D):
+            cost = str(self.rt_tbl_D[destination][self.name])
+            routeInfo = [[str(destination)], [self.name], [cost]]
+            routingUpdate.append(routeInfo)
+        p = NetworkPacket(0, 'control', str(routingUpdate))
         try:
             print('%s: sending routing update "%s" from interface %d' % (self, p, i))
             self.intf_L[i].put(p.to_byte_S(), 'out', True)
@@ -210,71 +213,42 @@ class Router:
             print('%s: packet "%s" lost on interface %d' % (self, p, i))
             pass
 
-
     ## forward the packet according to the routing table
     #  @param p Packet containing routing information
     def update_routes(self, p, i):
-        #TODO: add logic to update the routing tables and
-        # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
-        needsUpdate = False
-
+        sendUpdates = False
         if p.prot_S == 'control':
-            routingTable = ast.literal_eval(p.data_S) #convert routing string back to dictionary
-
-            #add any new discovered destinations and info to routing table
-            for destination in list(routingTable):
-                for router in list(routingTable[destination]):
-                    if destination not in self.rt_tbl_D:
-                        cost = int(routingTable[destination][router])
-                        self.rt_tbl_D.update({destination: {router: cost}})
-                    if router != self.name:
-                        cost = int(routingTable[destination][router])
-                        origRouter = self.name
-                        origCost = self.rt_tbl_D.get(destination).get(origRouter)
-                        if origCost == None:
-                            origCost = 100 # prevent error, large value place holder for when we don't know the path cost yet
-                        self.rt_tbl_D.update({destination: {origRouter: origCost, router: cost}})
-
-            #calculate lowest paths using bellman-ford algorithm
-            #need to get to H1 from RB
-            # print("\ntable = ",self.rt_tbl_D)
-            # print("\ncost_D = ", self.cost_D)
-            curLinkCost = 0
-            curLink = 0
-            curPlace = ""
-
-            #might need to encapsulate in larger loop for more than 2 routers
-            #get cost of link to router
-            for neighbor in list(self.cost_D):                                      #get the neighbors of current router
-                if neighbor[0] == 'R':                                               # if the neighbor is another router
-                    for interface in list(self.cost_D[neighbor]):                    # record the link cost and router info
-                        curLinkCost = (curLinkCost + int(self.cost_D[neighbor][interface]))
-                        curLink = interface
-                        curPlace = neighbor
-
-            #update curLink according to new neighbors
-            for destination in list(self.rt_tbl_D):
-                if destination != router and destination not in self.cost_D and destination != self.name:
-                    for router in list(self.rt_tbl_D[destination]):
-                        if router == curPlace:  # doesn't handle multiple routers to one host
-                            curLinkCost = (curLinkCost + self.rt_tbl_D[destination][router]) #add the link cost to the from new router to host
-
-            #update curLink according to new neighbors
-            for destination in list(self.rt_tbl_D):
-                if destination != router and destination not in self.cost_D:
-                    for router in list(self.rt_tbl_D[destination]):
-                        if router != curPlace:
-                            if(curLinkCost < self.rt_tbl_D[destination][router]):
-                                self.rt_tbl_D[destination][router] = curLinkCost
-                                needsUpdate = True
-
-            # print("\ntable = ",self.rt_tbl_D)
-            # print("\n")
-            if needsUpdate:
-                self.send_routes(curLink)
+            routingTable = ast.literal_eval(p.data_S) #convert routing string back to list
+            for info in routingTable:
+                destination = ''.join(info[0])
+                router = ''.join(info[1])
+                cost = int(''.join(info[2]))
+                if destination in self.rt_tbl_D:
+                    self.rt_tbl_D[destination][router] = cost
+                else:
+                    self.rt_tbl_D[destination] = {router:cost}
+                if self.name not in self.rt_tbl_D[destination]:
+                    self.rt_tbl_D[destination][self.name] = self.rt_tbl_D[destination][router] + self.rt_tbl_D[router][self.name]
+                    sendUpdates = True
+                else:
+                    if self.rt_tbl_D[destination][router] + self.rt_tbl_D[router][self.name] < self.rt_tbl_D[destination][self.name]:
+                        self.rt_tbl_D[destination][self.name] = self.rt_tbl_D[destination][router] + self.rt_tbl_D[router][self.name]
+                        sendUpdates = True
         else:
             print("Not a control packet")
+        if sendUpdates:
+            for neighbor in self.cost_D:
+                if neighbor[0] == 'R': # if router
+                    lowestCost = 100 #arbitrary large number
+                    for interface in list(self.cost_D[neighbor]):
+                        currentCost = self.cost_D[neighbor][interface]
+                        if currentCost < lowestCost:
+                            lowestCost = currentCost
+                            lowestCostingInterface = interface
+                    self.send_routes(lowestCostingInterface)
+        else:
+            return
 
 
     ## Print routing table
