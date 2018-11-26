@@ -2,7 +2,6 @@ import queue
 import threading
 import ast
 import copy
-from sys import maxsize 
 
 ## wrapper class for a queue of packets
 class Interface:
