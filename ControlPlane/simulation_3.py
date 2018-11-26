@@ -6,7 +6,7 @@ import sys
 
 ##configuration parameters
 router_queue_size = 0 #0 means unlimited
-simulation_time = 5   #give the network_3 sufficient time to execute transfers
+simulation_time = 10   #give the network_3 sufficient time to execute transfers
 
 if __name__ == '__main__':
     object_L = [] #keeps track of objects, so we can kill their threads at the end
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         t.start()
 
     ## compute routing tables
-    router_a.send_routes(1) #one update starts the routing process
+    router_a.send_routes(1, "control") #one update starts the routing process
     sleep(simulation_time)  #let the tables converge
     print("Converged routing tables")
     for obj in object_L:

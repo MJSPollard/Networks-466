@@ -1,6 +1,7 @@
 import queue
 import threading
 import ast
+import copy
 
 ## wrapper class for a queue of packets
 class Interface:
@@ -145,6 +146,7 @@ class Router:
         # add cost of router path to itself to routing table
         # {destination: {router: cost}}
         self.rt_tbl_D = {router: {router: 0}}
+        self.cs_tbl_D = {}
 
         # add other possible destinations and cost to routing table
         for destination in list(self.cost_D):
@@ -212,10 +214,15 @@ class Router:
 
     ## send out route update
     # @param i Interface number on which to send out a routing update
-    def send_routes(self, i):
+    def send_routes(self, i, type):
         #create a routing table update packet
         route_update = str(self.rt_tbl_D)
-        p = NetworkPacket(0, 'control', route_update)
+        if type == "control":
+            p = NetworkPacket(0, 'control', route_update)
+        elif type == "GotInfo":
+            p = NetworkPacket(0, 'control', "GotInfo")
+        else:
+            print("unkown packet type in send_routes")
         try:
             print('%s: sending routing update "%s" from interface %d' % (self, p, i))
             self.intf_L[i].put(p.to_byte_S(), 'out', True)
@@ -231,61 +238,98 @@ class Router:
         # possibly send out routing updates
         print('%s: Received routing update %s from interface %d' % (self, p, i))
         needsUpdate = False
-
         if p.prot_S == 'control':
-            routingTable = ast.literal_eval(p.data_S) #convert routing string back to dictionary
+            if p.data_S != "GotInfo":
+                routingTable = ast.literal_eval(p.data_S) #convert routing string back to dictionary
+                #accumulate all vertice info into dictionary
+                for destination in list(routingTable):
+                    for router in list(routingTable[destination]):
+                        if destination not in self.rt_tbl_D:
+                            cost = int(routingTable[destination][router])
+                            self.rt_tbl_D.update({destination: {router: cost}})
+                            needsUpdate = True
+                        elif router not in self.rt_tbl_D[destination]:
+                            cost = int(routingTable[destination][router])
+                            self.rt_tbl_D.get(destination).update({router: cost})
+                            needsUpdate = True
+                        else:
+                            needsUpdate = False
+                if needsUpdate:
+                    self.send_routes(1, "control")
+                self.rt_tbl_D = routingTable
+                routerList = []
+                for destination in list(self.rt_tbl_D):
+                    if destination[0] == 'R':
+                        routerList.append(destination)
+                for destination in list(self.rt_tbl_D):
+                    for router in routerList:
+                        if router not in list(self.rt_tbl_D[destination]):
+                            self.rt_tbl_D.get(destination).update({router: 9}) #set cost to arbitrary large value
+                self.cs_tbl_D = copy.deepcopy(self.rt_tbl_D)
+                for destination in list(self.cs_tbl_D):
+                    if destination[0] != 'R':
+                        self.cs_tbl_D.pop(destination, None)
+                    else:
+                        for router in list(self.cs_tbl_D[destination]):
+                            cost = self.cs_tbl_D[destination][router]
+                            if cost == 0 or cost == 9:
+                                self.cs_tbl_D[destination].pop(router, None)
 
-            #add any new discovered destinations and info to routing table
-            for destination in list(routingTable):
-                for router in list(routingTable[destination]):
-                    if destination not in self.rt_tbl_D:
-                        cost = int(routingTable[destination][router])
-                        self.rt_tbl_D.update({destination: {router: cost}})
-                    if router != self.name:
-                        cost = int(routingTable[destination][router])
-                        origRouter = self.name
-                        origCost = self.rt_tbl_D.get(destination).get(origRouter)
-                        if origCost == None:
-                            origCost = 100 # prevent error, large value place holder for when we don't know the path cost yet
-                        self.rt_tbl_D.update({destination: {origRouter: origCost, router: cost}})
 
-            #calculate lowest paths using bellman-ford algorithm
-            #need to get to H1 from RB
-            # print("\ntable = ",self.rt_tbl_D)
-            # print("\ncost_D = ", self.cost_D)
-            curLinkCost = 0
-            curLink = 0
-            curPlace = ""
 
-            #might need to encapsulate in larger loop for more than 2 routers
-            #get cost of link to router
-            for neighbor in list(self.cost_D):                                      #get the neighbors of current router
-                if neighbor[0] == 'R':                                               # if the neighbor is another router
-                    for interface in list(self.cost_D[neighbor]):                    # record the link cost and router info
-                        curLinkCost = (curLinkCost + int(self.cost_D[neighbor][interface]))
-                        curLink = interface
-                        curPlace = neighbor
 
-            #update curLink according to new neighbors
-            for destination in list(self.rt_tbl_D):
-                if destination != router and destination not in self.cost_D and destination != self.name:
-                    for router in list(self.rt_tbl_D[destination]):
-                        if router == curPlace:  # doesn't handle multiple routers to one host
-                            curLinkCost = (curLinkCost + self.rt_tbl_D[destination][router]) #add the link cost to the from new router to host
+            print("\nrouting table = ", self.rt_tbl_D)
+            print("\nneighbor table = ", temp)
+            print("\ncost_D = ", self.cost_D)
+            print("\n")
 
-            #update curLink according to new neighbors
-            for destination in list(self.rt_tbl_D):
-                if destination != router and destination not in self.cost_D:
-                    for router in list(self.rt_tbl_D[destination]):
-                        if router != curPlace:
-                            if(curLinkCost < self.rt_tbl_D[destination][router]):
-                                self.rt_tbl_D[destination][router] = curLinkCost
-                                needsUpdate = True
+
+
+            #find Shortest path, call send routes each time a smaller path is found
+            # for destination in list(self.rt_tbl_D):
+            #     for router in list(self.rt_tbl_D[destination]):
+
+
+
+
+
+
+            # #calculate lowest paths using bellman-ford algorithm
+            # #need to get to H1 from RB
+            # # print("\ntable = ",self.rt_tbl_D)
+            # # print("\ncost_D = ", self.cost_D)
+            # curLinkCost = 0
+            # curLink = 0
+            # curPlace = ""
+
+            # #might need to encapsulate in larger loop for more than 2 routers
+            # #get cost of link to router
+            # for neighbor in list(self.cost_D):                                      #get the neighbors of current router
+            #     if neighbor[0] == 'R':                                               # if the neighbor is another router
+            #         for interface in list(self.cost_D[neighbor]):                    # record the link cost and router info
+            #             curLinkCost = (curLinkCost + int(self.cost_D[neighbor][interface]))
+            #             curLink = interface
+            #             curPlace = neighbor
+
+            # #update curLink according to new neighbors
+            # for destination in list(self.rt_tbl_D):
+            #     if destination != router and destination not in self.cost_D and destination != self.name:
+            #         for router in list(self.rt_tbl_D[destination]):
+            #             if router == curPlace:  # doesn't handle multiple routers to one host
+            #                 curLinkCost = (curLinkCost + self.rt_tbl_D[destination][router]) #add the link cost to the from new router to host
+
+            # #update curLink according to new neighbors
+            # for destination in list(self.rt_tbl_D):
+            #     if destination != router and destination not in self.cost_D:
+            #         for router in list(self.rt_tbl_D[destination]):
+            #             if router != curPlace:
+            #                 if(curLinkCost < self.rt_tbl_D[destination][router]):
+            #                     self.rt_tbl_D[destination][router] = curLinkCost
+            #                     needsUpdate = True
 
             # print("\ntable = ",self.rt_tbl_D)
             # print("\n")
-            if needsUpdate:
-                self.send_routes(curLink)
+
         else:
             print("Not a control packet")
 
@@ -316,7 +360,7 @@ class Router:
         for router in routerList:
             #add row top line
             print("╞══════", end = '')
-            for destination in list(self.rt_tbl_D):
+            for destination in sorted(self.rt_tbl_D):
                 print("╪══════", end = '')
             print("╡")
             #add row info
