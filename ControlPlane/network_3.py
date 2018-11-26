@@ -2,6 +2,7 @@ import queue
 import threading
 import ast
 import copy
+from sys import maxsize
 
 ## wrapper class for a queue of packets
 class Interface:
@@ -187,15 +188,27 @@ class Router:
     #  @param i Incoming interface number for packet p
     def forward_packet(self, p, i):
         try:
-            #get destination name
-            #loop through cost_D until destination name matches the index
-            #get that interface to send out on
-            if(i > 0):
-                intf_I = 0
+            # TODO: Here you will need to implement a lookup into the
+            # forwarding table to find the appropriate outgoing interface
+            #{neighbor: {interface: cost}} <-- cost_D
+            #if the packet is going towards host 1, forward to interface 0
+            lowestCost = 99
+            print("cost_D")
+            print(self.cost_D)
+            interfaceLength = len(self.intf_L)
+            print((interfaceLength - 1) / 2)
+            if(i > (interfaceLength - 1) / 2):
+                for neighbor in list(self.cost_D):
+                    for interface in list(self.cost_D[neighbor]):
+                        if((self.cost_D[neighbor][interface] < lowestCost) and (interface < (interfaceLength - 1) / 2)):
+                            lowestCost = self.cost_D[neighbor][interface]
+                            intf_I = interface
             else:
-                for destination in list(self.cost_D):
-                    for interface in list(self.cost_D[destination]):
-                        if(interface > 0):
+                #loop through cost_D and find an outgoing interface
+                for neighbor in list(self.cost_D):
+                    for interface in list(self.cost_D[neighbor]):
+                        if(self.cost_D[neighbor][interface] < lowestCost and interface > (interfaceLength - 1) / 2):
+                            lowestCost = self.cost_D[neighbor][interface]
                             intf_I = interface
             self.intf_L[intf_I].put(p.to_byte_S(), 'out', True)
             print('%s: forwarding packet "%s" from interface %d to %d' % \
