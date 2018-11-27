@@ -157,6 +157,17 @@ class Router:
         print('%s: Initialized routing table' % self)
         self.print_routes()
 
+    #determine lowest interface costs
+    def findLowest(self):
+        for neighbor in self.cost_D:
+            if 'R' in str(neighbor):
+                lowestCost = 100 #arbitrary large number
+                for interface in list(self.cost_D[neighbor]):
+                    currentCost = self.cost_D[neighbor][interface]
+                    if currentCost < lowestCost:
+                        lowestCost = currentCost
+                        lowestCostingInterface = interface
+                self.send_routes(lowestCostingInterface)
 
     ## called when printing the object
     def __str__(self):
@@ -238,15 +249,7 @@ class Router:
         else:
             print("Not a control packet")
         if sendUpdates:
-            for neighbor in self.cost_D:
-                if neighbor[0] == 'R': # if router
-                    lowestCost = 100 #arbitrary large number
-                    for interface in list(self.cost_D[neighbor]):
-                        currentCost = self.cost_D[neighbor][interface]
-                        if currentCost < lowestCost:
-                            lowestCost = currentCost
-                            lowestCostingInterface = interface
-                    self.send_routes(lowestCostingInterface)
+            self.findLowest()
         else:
             return
 
