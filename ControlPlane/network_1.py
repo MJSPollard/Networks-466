@@ -228,31 +228,30 @@ class Router:
     #  @param p Packet containing routing information
     def update_routes(self, p, i):
         print('%s: Received routing update %s from interface %d' % (self, p, i))
-        sendUpdates = False
+        update = False
         if p.prot_S == 'control':
             routingTable = ast.literal_eval(p.data_S) #convert routing string back to list
             for info in routingTable:
                 destination = ''.join(info[0])
                 router = ''.join(info[1])
                 cost = int(''.join(info[2]))
-                if destination in self.rt_tbl_D:
-                    self.rt_tbl_D[destination][router] = cost
-                else:
+                if destination not in self.rt_tbl_D:
                     self.rt_tbl_D[destination] = {router:cost}
+                else:
+                    self.rt_tbl_D[destination][router] = cost
                 if self.name not in self.rt_tbl_D[destination]:
                     self.rt_tbl_D[destination][self.name] = self.rt_tbl_D[destination][router] + self.rt_tbl_D[router][self.name]
-                    sendUpdates = True
+                    update = True
                 else:
                     if self.rt_tbl_D[destination][router] + self.rt_tbl_D[router][self.name] < self.rt_tbl_D[destination][self.name]:
                         self.rt_tbl_D[destination][self.name] = self.rt_tbl_D[destination][router] + self.rt_tbl_D[router][self.name]
-                        sendUpdates = True
+                        update = True
         else:
             print("Not a control packet")
-        if sendUpdates:
+        if update:
             self.findLowest()
         else:
             return
-
 
     ## Print routing table
     def print_routes(self):
