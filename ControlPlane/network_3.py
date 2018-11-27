@@ -195,21 +195,25 @@ class Router:
             lowestCost = 99
             print("cost_D")
             print(self.cost_D)
-            interfaceLength = len(self.intf_L)
-            print((interfaceLength - 1) / 2)
-            if(i > (interfaceLength - 1) / 2):
+            interfaceLength = int(len(self.intf_L)/2)
+            print(interfaceLength)
+            if(i >= interfaceLength):
                 for neighbor in list(self.cost_D):
                     for interface in list(self.cost_D[neighbor]):
-                        if((self.cost_D[neighbor][interface] < lowestCost) and (interface < (interfaceLength - 1) / 2)):
+                        if(self.cost_D[neighbor][interface] < lowestCost and interface < interfaceLength):
                             lowestCost = self.cost_D[neighbor][interface]
                             intf_I = interface
             else:
                 #loop through cost_D and find an outgoing interface
+                '''
                 for neighbor in list(self.cost_D):
                     for interface in list(self.cost_D[neighbor]):
-                        if(self.cost_D[neighbor][interface] < lowestCost and interface > (interfaceLength - 1) / 2):
+                        if(self.cost_D[neighbor][interface] < lowestCost and interface < interfaceLength):
                             lowestCost = self.cost_D[neighbor][interface]
                             intf_I = interface
+                '''
+                for neighbor in list(self.cost_D)
+                    for
             self.intf_L[intf_I].put(p.to_byte_S(), 'out', True)
             print('%s: forwarding packet "%s" from interface %d to %d' % \
                 (self, p, i, intf_I))
@@ -217,6 +221,19 @@ class Router:
             print('%s: packet "%s" lost on interface %d' % (self, p, i))
             pass
 
+
+    ## send out route update
+    # @param i Interface number on which to send out a routing update
+    def send_routes(self, i):
+        #create a routing table update packet
+        route_update = str(self.rt_tbl_D)
+        p = NetworkPacket(0, 'control', route_update)
+        try:
+            print('%s: sending routing update "%s" from interface %d' % (self, p, i))
+            self.intf_L[i].put(p.to_byte_S(), 'out', True)
+        except queue.Full:
+            print('%s: packet "%s" lost on interface %d' % (self, p, i))
+            pass
 
     ## send out route update
     # @param i Interface number on which to send out a routing update
