@@ -206,25 +206,21 @@ class Router:
             lowestCost = 99
             print("cost_D")
             print(self.cost_D)
-            interfaceLength = int(len(self.intf_L)/2)
-            print(interfaceLength)
-            if(i >= interfaceLength):
+            interfaceLength = len(self.intf_L)
+            print((interfaceLength - 1) / 2)
+            if(i > (interfaceLength - 1) / 2):
                 for neighbor in list(self.cost_D):
                     for interface in list(self.cost_D[neighbor]):
-                        if(self.cost_D[neighbor][interface] < lowestCost and interface < interfaceLength):
+                        if((self.cost_D[neighbor][interface] < lowestCost) and (interface < (interfaceLength - 1) / 2)):
                             lowestCost = self.cost_D[neighbor][interface]
                             intf_I = interface
             else:
                 #loop through cost_D and find an outgoing interface
-                '''
                 for neighbor in list(self.cost_D):
                     for interface in list(self.cost_D[neighbor]):
-                        if(self.cost_D[neighbor][interface] < lowestCost and interface < interfaceLength):
+                        if(self.cost_D[neighbor][interface] < lowestCost and interface > (interfaceLength - 1) / 2):
                             lowestCost = self.cost_D[neighbor][interface]
                             intf_I = interface
-                '''
-                for neighbor in list(self.cost_D)
-                    for
             self.intf_L[intf_I].put(p.to_byte_S(), 'out', True)
             print('%s: forwarding packet "%s" from interface %d to %d' % \
                 (self, p, i, intf_I))
