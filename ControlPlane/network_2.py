@@ -191,10 +191,7 @@ class Router:
             #{neighbor: {interface: cost}} <-- cost_D
             #if the packet is going towards host 1, forward to interface 0
             lowestCost = 99
-            print("cost_D")
-            print(self.cost_D)
             interfaceLength = len(self.intf_L)
-            print((interfaceLength - 1) / 2)
             if(i > (interfaceLength - 1) / 2):
                 for neighbor in list(self.cost_D):
                     for interface in list(self.cost_D[neighbor]):
