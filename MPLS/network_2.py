@@ -205,7 +205,12 @@ class Router:
     def process_network_packet(self, pkt, i):
         #if from host or router to router that is not destination, encapsulate
         if pkt.dst not in self.encap_tbl_D:
-            m_fr = MPLSFrame("H1", pkt)
+            # Hacky way of setting sender label
+            # from host 1
+            if i == 0:
+                m_fr = MPLSFrame("H1", pkt)
+            elif i == 1:
+                m_fr = MPLSFrame("H2", pkt)
             print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
             #send the encapsulated packet for processing as MPLS frame
             self.process_MPLS_frame(m_fr, i)
@@ -225,7 +230,7 @@ class Router:
         print("outlabel = ", self.frwd_tbl_D[inlabel][0])
 
 
-        
+
         m_fr.label = self.frwd_tbl_D[inlabel][0]
         outInterface = self.frwd_tbl_D[inlabel][2]
         try:
