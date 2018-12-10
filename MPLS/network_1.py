@@ -81,6 +81,7 @@ class MPLSFrame:
     ## packet encoding lengths
     label_S_length = 5
 
+    ##init class
     def __init__(self, label, netPacket):
         self.label = label
         self.packet = netPacket
@@ -202,9 +203,6 @@ class Router:
     #  @param p Packet to forward
     #  @param i Incoming interface number for packet p
     def process_network_packet(self, pkt, i):
-        #TODO: encapsulate the packet in an MPLS frame based on self.encap_tbl_D
-        #print("STUFFF: ", self.name, self.encap_tbl_D, pkt.dst)
-
         #if from host or router to router that is not destination, encapsulate
         if pkt.dst not in self.encap_tbl_D:
             m_fr = MPLSFrame(pkt.dst, pkt)
@@ -218,21 +216,20 @@ class Router:
     #  @param m_fr: MPLS frame to process
     #  @param i Incoming interface number for the frame
     def process_MPLS_frame(self, m_fr, i):
-        #TODO: implement MPLS forward, or MPLS decapsulation if this is the last hop router for the path
         print('%s: processing MPLS frame "%s"' % (self, m_fr))
         ## From the label received, we determine where it's going
         inlabel=m_fr.label
         m_fr.label = self.frwd_tbl_D[inlabel][0]
         outInterface = self.frwd_tbl_D[inlabel][2]
-        ##see if we can decapsulate
         try:
+            #decapsulate
             if m_fr.label == self.frwd_tbl_D[inlabel][1]:
                 print("\nLAST HOP, DECAPSULATING\n")
                 fr = LinkFrame("Network", m_fr.packet)
             else:
+            #forward
                 print("\nNOT LAST HOP, FORWARDING\n")
                 fr = LinkFrame("MPLS", m_fr.to_byte_S())
-            # fr = LinkFrame('Network', m_fr.to_byte_S()) ##this is how it used to be set up. Always assume it was in there
             self.intf_L[outInterface].put(fr.to_byte_S(), 'out', True)
             print('%s: forwarding frame "%s" from interface %d to %d' % (self, fr, i, outInterface))
         except queue.Full:
