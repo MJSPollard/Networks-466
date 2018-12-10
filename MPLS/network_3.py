@@ -56,7 +56,7 @@ class NetworkPacket:
     def __init__(self, dst, data_S, priority=0):
         self.dst = dst
         self.data_S = data_S
-        #self.priority = priority
+        self.priority = priority
 
     ## called when printing the object
     def __str__(self):
@@ -205,12 +205,13 @@ class Router:
     def process_network_packet(self, pkt, i):
         #if from host or router to router that is not destination, encapsulate
         if pkt.dst not in self.encap_tbl_D:
-            # Hacky way of setting sender label
-            # from host 1
-            if i == 0:
-                m_fr = MPLSFrame("H1", pkt)
-            elif i == 1:
-                m_fr = MPLSFrame("H2", pkt)
+            # assign path based on priority (LP - Low Priority; HP - High Priority)
+            if pkt.priority == 0:
+                # h1
+                m_fr = MPLSFrame("LP", pkt)
+            elif pkt.priority == 1:
+                # h2
+                m_fr = MPLSFrame("HP", pkt)
             print('%s: encapsulated packet "%s" as MPLS frame "%s"' % (self, pkt, m_fr))
             #send the encapsulated packet for processing as MPLS frame
             self.process_MPLS_frame(m_fr, i)

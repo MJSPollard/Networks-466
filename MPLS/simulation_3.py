@@ -23,11 +23,11 @@ if __name__ == '__main__':
     #create routers and routing tables for connected clients (subnets)
 
     #determine where encapsulation and decapsulation are needed
-    encap_tbl_D = {"H1": {"RA"}, "H2": {"RA"}}
+    encap_tbl_D = {"LP": {"RA"}, "HP": {"RA"}}
     decap_tbl_D = {"RD":{"H3"}}
 
     # inlabel outlabel, dest, outinterface
-    frwd_tbl_D = {"H1": ("1", "H3", 2), "H2": ("2", "H3", 3)}
+    frwd_tbl_D = {"LP": ("1", "H3", 2), "HP": ("2", "H3", 3)}
 
     router_a = Router(name='RA',
                               intf_capacity_L=[500,500,500,500],
