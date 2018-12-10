@@ -56,7 +56,7 @@ class NetworkPacket:
     def __init__(self, dst, data_S, priority=0):
         self.dst = dst
         self.data_S = data_S
-        #TODO: add priority to the packet class
+        self.priority = priority
 
     ## called when printing the object
     def __str__(self):
