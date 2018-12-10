@@ -63,7 +63,7 @@ if __name__ == '__main__':
     frwd_tbl_D = {"1": ("H3", "H3", 2), "2": ("H3", "H3", 2)}
 
     router_d = Router(name='RD',
-                              intf_capacity_L=[500,500,100],
+                              intf_capacity_L=[500,500,500],
                               encap_tbl_D = encap_tbl_D,
                               frwd_tbl_D = frwd_tbl_D,
                               decap_tbl_D = decap_tbl_D,
