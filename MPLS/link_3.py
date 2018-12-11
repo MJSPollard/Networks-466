@@ -76,6 +76,12 @@ class Link:
                 continue #continue if no packet to transfer
             #otherwise try transmitting the packet
             try:
+                print("\n #-------- Queue --------# \n")
+                for pkt in intf_a.out_queue.queue:
+                    print("Packet with Priority: ",pkt[-1])
+                    print('\n-------------------\n')
+                print('\n#-----------------#\n')
+
                 #check if the interface is free to transmit a packet
                 if intf_a.next_avail_time <= time.time():
                     #transmit the packet
@@ -88,6 +94,8 @@ class Link:
                           ' - seconds until the next available time %f\n' \
                           ' - queue size %d' \
                           % (self, pkt_S, node_a, node_a_intf, node_b, node_b_intf, intf_a.next_avail_time - time.time(), intf_a.out_queue.qsize()))
+
+
 
                 # uncomment the lines below to see waiting time until next transmission
 #                 else:
