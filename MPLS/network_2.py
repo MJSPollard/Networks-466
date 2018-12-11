@@ -225,12 +225,6 @@ class Router:
         ## From the label received, we determine where it's going
 
         inlabel=m_fr.label
-
-        print("\ninlabel = ", inlabel)
-        print("outlabel = ", self.frwd_tbl_D[inlabel][0])
-
-
-
         m_fr.label = self.frwd_tbl_D[inlabel][0]
         outInterface = self.frwd_tbl_D[inlabel][2]
         try:
