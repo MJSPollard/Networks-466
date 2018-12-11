@@ -141,7 +141,7 @@ class Host:
         fr = LinkFrame.from_byte_S(fr_S)
         assert(fr.type_S == 'Network') #should be receiving network packets by hosts
         pkt_S = fr.data_S
-        print('%s: received packet "%s"' % (self, pkt_S))
+        print('\n\n\n---%s: received packet "%s"\n\n\n' % (self, pkt_S))
 
     ## thread target for the host to keep receiving data
     def run(self):
