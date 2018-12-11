@@ -66,6 +66,7 @@ class NetworkPacket:
     def to_byte_S(self):
         byte_S = str(self.dst).zfill(self.dst_S_length)
         byte_S += self.data_S
+        byte_S += str(self.priority)
         return byte_S
 
     ## extract a packet object from a byte string
@@ -73,8 +74,9 @@ class NetworkPacket:
     @classmethod
     def from_byte_S(self, byte_S):
         dst = byte_S[0 : NetworkPacket.dst_S_length].strip('0')
-        data_S = byte_S[NetworkPacket.dst_S_length : ]
-        return self(dst, data_S)
+        data_S = byte_S[NetworkPacket.dst_S_length : -1]
+        priority = int(byte_S[-1])
+        return self(dst, data_S, priority)
 
 
 class MPLSFrame:
@@ -123,7 +125,7 @@ class Host:
     # @param data_S: data being transmitted to the network layer
     # @param priority: packet priority
     def udt_send(self, dst, data_S, priority=0):
-        pkt = NetworkPacket(dst, data_S)
+        pkt = NetworkPacket(dst, data_S, priority)
         print('%s: sending packet "%s" with priority %d' % (self, pkt, priority))
         #encapsulate network packet in a link frame (usually would be done by the OS)
         fr = LinkFrame('Network', pkt.to_byte_S())
@@ -204,6 +206,7 @@ class Router:
     #  @param i Incoming interface number for packet p
     def process_network_packet(self, pkt, i):
         #if from host or router to router that is not destination, encapsulate
+        print("###PACKET %s PRIORITY %d" % (pkt, pkt.priority))
         if pkt.dst not in self.encap_tbl_D:
             # assign path based on priority (LP - Low Priority; HP - High Priority)
             if pkt.priority == 0:
